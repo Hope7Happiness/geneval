@@ -9,6 +9,7 @@ import pandas as pd
 
 parser = argparse.ArgumentParser()
 parser.add_argument("filename", type=str)
+parser.add_argument("output_json", type=str)
 args = parser.parse_args()
 
 # Load classnames
@@ -43,3 +44,16 @@ for tag, task_df in df.groupby('tag', sort=False):
 print()
 
 print(f"Overall score (avg. over tasks): {np.mean(task_scores):.5f}")
+
+# save to a json file
+import json
+output = {
+    "total_images": len(df),
+    "total_prompts": len(df.groupby('metadata')),
+    "percent_correct_images": df['correct'].mean(),
+    "percent_correct_prompts": df.groupby('metadata')['correct'].any().mean(),
+    "task_scores": {tag: task_df['correct'].mean() for tag, task_df in df.groupby('tag', sort=False)},
+    "overall_score": np.mean(task_scores),
+}
+with open(args.output_json, "w") as f:
+    json.dump(output, f, indent=2)
